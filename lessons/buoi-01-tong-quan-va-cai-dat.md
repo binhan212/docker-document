@@ -79,7 +79,7 @@ Nếu `docker info` báo không kết nối được daemon, thường là Docke
 
 ## 7. Bài tập mini
 
-- Tự giải thích lại bằng lời của bạn: image, container, VM.
+- Tự giải thích lại bằng lời của bạn: Docker, container và VM.
 - Trả lời câu hỏi: vì sao Docker giúp giảm lỗi khác môi trường?
 
 ## 8. Chuẩn bị cho buổi sau
@@ -87,5 +87,5 @@ Nếu `docker info` báo không kết nối được daemon, thường là Docke
 Buổi sau bạn sẽ học:
 
 - Image là gì.
-- Container là gì.
+- Phân biệt image với container.
 - Các lệnh Docker cơ bản để kéo image, chạy container và xem log.

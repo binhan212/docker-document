@@ -68,5 +68,5 @@ ports:
 ## 6. Bài tập mini
 
 - Tự mô tả một lỗi bạn từng gặp và cách dùng log để tìm ra nguyên nhân.
-- Sửa file Compose Seq để lấy cổng từ `.env`.
+- Đổi giá trị cổng trong file `.env` của Seq rồi chạy lại Compose để xác nhận cấu hình mới đã được áp dụng.
 - Giải thích vì sao volume làm dữ liệu bền hơn container.

@@ -1,0 +1,26 @@
+services:
+  seq:
+    image: datalust/seq:latest
+    container_name: seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "${SEQ_PORT:-8081}:80"
+      - "${SEQ_INGEST_PORT:-5341}:5341"
+    volumes:
+      - seq-data:/data
+    restart: unless-stopped
+
+  seq-input-gelf:
+    image: datalust/seq-input-gelf:latest
+    container_name: seq-input-gelf
+    environment:
+      SEQ_ADDRESS: http://seq:80
+    depends_on:
+      - seq
+    ports:
+      - "${SEQ_GELF_PORT:-12201}:12201/udp"
+    restart: unless-stopped
+
+volumes:
+  seq-data:

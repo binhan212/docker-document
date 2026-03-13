@@ -3,6 +3,37 @@
 > Phiên bản tài liệu: 13/03/2026  
 > Mục tiêu: đọc một mạch, làm theo được luôn, không cần vừa học vừa "cầu nguyện máy đừng lỗi".
 
+## Cách dùng bộ tài liệu trong workspace
+
+Ngoài file tài liệu tổng này, trong workspace hiện đã có sẵn thêm 2 nhóm tài nguyên để bạn học liền mạch hơn:
+
+### 1. Bộ bài học theo từng buổi
+
+- [lessons/README.md](lessons/README.md)
+- [lessons/buoi-01-tong-quan-va-cai-dat.md](lessons/buoi-01-tong-quan-va-cai-dat.md)
+- [lessons/buoi-02-image-container-va-lenh-co-ban.md](lessons/buoi-02-image-container-va-lenh-co-ban.md)
+- [lessons/buoi-03-dockerfile-va-build-image.md](lessons/buoi-03-dockerfile-va-build-image.md)
+- [lessons/buoi-04-docker-compose-co-ban.md](lessons/buoi-04-docker-compose-co-ban.md)
+- [lessons/buoi-05-thuc-hanh-redis-va-seq.md](lessons/buoi-05-thuc-hanh-redis-va-seq.md)
+- [lessons/buoi-06-volumes-networks-env-va-debug.md](lessons/buoi-06-volumes-networks-env-va-debug.md)
+
+Gợi ý cách học:
+
+1. Đọc file này một lượt để có bức tranh tổng thể.
+2. Học tiếp theo từng buổi trong thư mục `lessons`.
+3. Sau mỗi buổi, chạy file tương ứng trong thư mục `practice`.
+
+### 2. Bộ file thực hành mẫu
+
+- [practice/nginx-static/Dockerfile](practice/nginx-static/Dockerfile)
+- [practice/nginx-static/index.html](practice/nginx-static/index.html)
+- [practice/nginx-static/.dockerignore](practice/nginx-static/.dockerignore)
+- [practice/redis/docker-compose.yml](practice/redis/docker-compose.yml)
+- [practice/seq/docker-compose.yml](practice/seq/docker-compose.yml)
+- [practice/seq/.env.example](practice/seq/.env.example)
+
+Bạn có thể dùng ngay các file trên để thực hành build image, chạy Redis bằng Compose, và chạy Seq cùng seq-input-gelf mà không phải tự gõ lại từ đầu.
+
 ## 1. Giới thiệu về Docker và containerization
 
 ### Container là gì? So sánh với máy ảo (VM)
@@ -1632,7 +1663,141 @@ Tạo file `.env` để cấu hình cổng cho Seq rồi dùng lại trong Compo
 
 ---
 
-## 16. Gợi ý học tiếp sau tài liệu này
+## 16. Đáp án mẫu tham khảo
+
+Phần này là đáp án mẫu để đối chiếu. Không nhất thiết phải giống từng ký tự, miễn đúng ý và chạy được.
+
+### Đáp án Bài 1
+
+Chạy Nginx bằng `docker run`, map cổng `8080:80`, xem log và xóa container:
+
+```bash
+docker pull nginx:latest
+docker run -d -p 8080:80 --name web-demo nginx:latest
+docker ps
+docker logs web-demo
+docker stop web-demo
+docker rm web-demo
+```
+
+### Đáp án Bài 2
+
+Bạn có thể dùng luôn bộ mẫu ở [practice/nginx-static/Dockerfile](practice/nginx-static/Dockerfile).
+
+Dockerfile mẫu:
+
+```dockerfile
+FROM nginx:latest
+COPY . /usr/share/nginx/html
+```
+
+Build và chạy:
+
+```bash
+docker build -t hello-docker:1.0 .
+docker run -d -p 8081:80 --name hello-site hello-docker:1.0
+```
+
+### Đáp án Bài 3
+
+Bạn có thể dùng luôn file ở [practice/redis/docker-compose.yml](practice/redis/docker-compose.yml).
+
+Ví dụ:
+
+```yaml
+services:
+  redis:
+    image: redis:7
+    container_name: redis-local
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+```
+
+Chạy:
+
+```bash
+docker compose up -d
+docker compose ps
+docker compose down
+```
+
+### Đáp án Bài 4
+
+Ví dụ file Compose cho app và Redis:
+
+```yaml
+services:
+  app:
+    image: nginx:latest
+    container_name: app-demo
+    environment:
+      REDIS_HOST: redis
+    ports:
+      - "8080:80"
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7
+    container_name: redis-demo
+    ports:
+      - "6379:6379"
+```
+
+Nếu app của bạn là Node.js, Python hoặc .NET thì service `app` có thể đổi sang `build: .` hoặc image riêng của bạn. Ý chính của bài là:
+
+- app đọc biến môi trường `REDIS_HOST=redis`
+- app gọi Redis bằng hostname `redis`
+- app phụ thuộc Redis ở mức thứ tự khởi động
+
+### Đáp án Bài 5
+
+Bạn có thể tham khảo file ở [practice/seq/docker-compose.yml](practice/seq/docker-compose.yml) và [practice/seq/.env.example](practice/seq/.env.example).
+
+File `.env` mẫu:
+
+```env
+SEQ_PORT=8081
+SEQ_INGEST_PORT=5341
+SEQ_GELF_PORT=12201
+```
+
+File Compose mẫu:
+
+```yaml
+services:
+  seq:
+    image: datalust/seq:latest
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "${SEQ_PORT}:80"
+      - "${SEQ_INGEST_PORT}:5341"
+    volumes:
+      - seq-data:/data
+
+  seq-input-gelf:
+    image: datalust/seq-input-gelf:latest
+    environment:
+      SEQ_ADDRESS: http://seq:80
+    depends_on:
+      - seq
+    ports:
+      - "${SEQ_GELF_PORT}:12201/udp"
+
+volumes:
+  seq-data:
+```
+
+---
+
+## 17. Gợi ý học tiếp sau tài liệu này
 
 Sau khi xong phần cơ bản, bạn có thể học tiếp:
 
